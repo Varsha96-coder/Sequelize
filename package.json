@@ -1,0 +1,21 @@
+{
+  "name": "nodejs_mysql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "set-high-memory": "node --max_old_space_size=10000 ./node_modules/@angular/cli/bin/ng build --configuration=prod",
+    "mserve": "set NODE_OPTIONS=--max_old_space_size=10000 & ng serve --open"
+  },
+  "author": "varsha",
+  "license": "ISC",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.3.0",
+    "ng": "0.0.0",
+    "prompt-sync": "^4.2.0",
+    "sequelize": "^6.6.5"
+  }
+}
