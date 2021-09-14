@@ -1,36 +1,36 @@
-const Sequelize = require("sequelize");
-const mysql = require("mysql2");
-const fs = require("fs");
-const csv = require("csv-parser");
+const Sequelize = require('sequelize');
+const mysql = require('mysql2');
+const fs = require('fs');
+const csv = require('csv-parser');
 
 // create db if it doesn't already exist
 const connection = mysql.createConnection({
-  host: "localhost",
-  port: "3306",
-  user: "root",
-  password: "varSHA_96",
+  host: 'localhost',
+  port: '3306',
+  user: 'root',
+  password: 'varSHA_96',
 });
 
-connection.connect(function (err) {
+connection.connect((err) => {
   if (err) {
-    console.log("Error connecting to Database", err);
-    retur;
+    console.log('Error connecting to Database', err);
+    return;
   }
-  console.log("Connection established");
+  console.log('Connection established');
   connection.query(
-    `CREATE DATABASE IF NOT EXISTS Tripuradb;`,
-    function (error, results, fields) {
+    'CREATE DATABASE IF NOT EXISTS Tripuradb;',
+    (error) => {
       if (error) throw error;
 
-      console.log("db created");
+      console.log('db created');
       connection.end();
-    }
+    },
   );
 });
 
-const sequelize = new Sequelize("Tripuradb", "root", "varSHA_96", {
-  host: "localhost",
-  dialect: "mysql" /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql'*/,
+const sequelize = new Sequelize('Tripuradb', 'root', 'varSHA_96', {
+  host: 'localhost',
+  dialect: 'mysql' /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */,
   pool: {
     max: 20,
     min: 0,
@@ -39,7 +39,7 @@ const sequelize = new Sequelize("Tripuradb", "root", "varSHA_96", {
   },
 });
 
-const companyMaster = sequelize.define("CompanyMaster", {
+const companyMaster = sequelize.define('CompanyMaster', {
   // Model attributes are defined here
   id: {
     type: Sequelize.STRING,
@@ -67,33 +67,31 @@ const companyMaster = sequelize.define("CompanyMaster", {
 // This creates the table if it doesn't exist (and does nothing if it already exists)
 let year = 0;
 
+const companiesData = [];
+
 sequelize
   .sync()
   .then((result) => {
     console.log(result);
-    fs.createReadStream("C://Users//Acer//Downloads//Tripura.csv")
+    fs.createReadStream('C://Users//Acer//Downloads//Tripura.csv')
       .pipe(csv())
-      .on("data", (row) => {
+      .on('data', (row) => {
         const getCap = row.DATE_OF_REGISTRATION;
 
         // console.log(getCap);
-        if (getCap !== "NA") {
+        if (getCap !== 'NA') {
           let yr = getCap.substring(6);
 
           if (yr.length === 2) {
             const yrInt = parseInt(yr, 10);
-            if (yrInt >= 0 && yrInt <= 21) {
-              yr = `20${yr}`;
-            } else {
-              yr = `19${yr}`;
-            }
+            yr = yrInt >= 0 && yrInt <= 21 ? `20${yr}` : `19${yr}`;
             year = parseInt(yr, 10);
           } else {
             const mydate = new Date(getCap);
             year = mydate.getFullYear();
           }
 
-          return companyMaster.create({
+          companiesData.push({
             id: row.CORPORATE_IDENTIFICATION_NUMBER,
             CompanyName: row.Company_Name,
             Year: year,
@@ -101,10 +99,13 @@ sequelize
             Buisness: row.PRINCIPAL_BUSINESS_ACTIVITY_AS_PER_CIN,
           });
         }
+      })
+      .on('end', () => {
+        companyMaster.bulkCreate(companiesData);
       });
   })
   .then((result) => {
-    console.log("Row inserted..\n" + result);
+    console.log(`Row inserted..\n${result}`);
   })
   .catch((err) => {
     console.log(err);
