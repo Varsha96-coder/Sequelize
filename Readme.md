@@ -14,4 +14,3 @@
 1. index.js - the root file of the project which runs either load.js or analyze.js
 2. load.js - it creates the database, tables and inserts rows.
 3. analyze.js - it runs the mysql queries.
-

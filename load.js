@@ -1,36 +1,37 @@
-const Sequelize = require('sequelize');
-const mysql = require('mysql2');
-const fs = require('fs');
-const csv = require('csv-parser');
+const Sequelize = require("sequelize");
+const mysql = require("mysql2");
+const fs = require("fs");
+const csv = require("csv-parser");
 
-// create db if it doesn't already exist
+// creating connection
 const connection = mysql.createConnection({
-  host: 'localhost',
-  port: '3306',
-  user: 'root',
-  password: 'varSHA_96',
+  host: "localhost",
+  port: "3306",
+  user: "root",
+  password: "varSHA_96",
 });
 
 connection.connect((err) => {
   if (err) {
-    console.log('Error connecting to Database', err);
+    console.log("Error connecting to Database", err);
     return;
   }
-  console.log('Connection established');
+  console.log("Connection established");
   connection.query(
-    'CREATE DATABASE IF NOT EXISTS Tripuradb;',
+    "CREATE DATABASE IF NOT EXISTS Tripuradb;", //create db if it doesn't already exist
     (error) => {
       if (error) throw error;
 
-      console.log('db created');
+      console.log("db created");
       connection.end();
-    },
+    }
   );
 });
 
-const sequelize = new Sequelize('Tripuradb', 'root', 'varSHA_96', {
-  host: 'localhost',
-  dialect: 'mysql' /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */,
+//creating connection with sequelize
+const sequelize = new Sequelize("Tripuradb", "root", "varSHA_96", {
+  host: "localhost",
+  dialect: "mysql" /* one of 'mysql' | 'mariadb' | 'postgres' | 'mssql' */,
   pool: {
     max: 20,
     min: 0,
@@ -39,7 +40,8 @@ const sequelize = new Sequelize('Tripuradb', 'root', 'varSHA_96', {
   },
 });
 
-const companyMaster = sequelize.define('CompanyMaster', {
+// creating table schema
+const companyMaster = sequelize.define("CompanyMaster", {
   // Model attributes are defined here
   id: {
     type: Sequelize.STRING,
@@ -73,13 +75,13 @@ sequelize
   .sync()
   .then((result) => {
     console.log(result);
-    fs.createReadStream('C://Users//Acer//Downloads//Tripura.csv')
+    fs.createReadStream("C://Users//Acer//Downloads//Tripura.csv") // reads the data from csv file
       .pipe(csv())
-      .on('data', (row) => {
+      .on("data", (row) => {
         const getCap = row.DATE_OF_REGISTRATION;
 
         // console.log(getCap);
-        if (getCap !== 'NA') {
+        if (getCap !== "NA") {
           let yr = getCap.substring(6);
 
           if (yr.length === 2) {
@@ -91,6 +93,7 @@ sequelize
             year = mydate.getFullYear();
           }
 
+          //creating the records and fields
           companiesData.push({
             id: row.CORPORATE_IDENTIFICATION_NUMBER,
             CompanyName: row.Company_Name,
@@ -100,8 +103,8 @@ sequelize
           });
         }
       })
-      .on('end', () => {
-        companyMaster.bulkCreate(companiesData);
+      .on("end", () => {
+        companyMaster.bulkCreate(companiesData); //loading the whole bunch of records into mysql in one go
       });
   })
   .then((result) => {
